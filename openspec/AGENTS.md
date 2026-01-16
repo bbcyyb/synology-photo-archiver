@@ -332,7 +332,7 @@ printf "## Why\n...\n\n## What Changes\n- ...\n\n## Impact\n- ...\n" > openspec/
 printf "## 1. Implementation\n- [ ] 1.1 ...\n" > openspec/changes/$CHANGE/tasks.md
 
 # 3) 添加增量（示例）
-cat > openspec/changes/$CHANGE/specs/auth/spec.md << 'EOF'
+cat > openspec/changes/$CHANGE/specs/auth/spec.md << 'EOF' 
 ## ADDED Requirements
 ### Requirement: Two-Factor Authentication
 用户在登录期间必须提供第二个因素。
@@ -464,7 +464,13 @@ openspec archive <change-id> [--yes|-y]  # 标记为完成（为自动化添加 
 - **高级目标优先**: 当用户提出新想法时，首先引导用户更新 `openspec/project.md` 来明确项目的顶层目标、技术栈和核心约束。
 - **细化为提案**: 在 `project.md` 达成共识后，创建一个正式的 OpenSpec 提案 (`/openspec:proposal`)，将想法分解为详细的 `design.md`, `tasks.md`, 和 `spec.md`。
 
-### 2. 提议-确认-执行 (Propose-Confirm-Execute)
+### 2. Git 分支管理 (Git Branch Management)
+在开始任何实施工作（编写代码、文档或配置）之前，**必须**检查并切换 Git 分支。
+- **禁止直接在 main/master 操作**: 除非是极小的文档修复，否则严禁在主分支上直接修改文件。
+- **创建功能分支**: 根据变更 ID 创建对应的分支，例如 `git checkout -b feature/<change-id>`。
+- **验证状态**: 使用 `git status` 确认当前所在分支正确后再开始工作。
+
+### 3. 提议-确认-执行 (Propose-Confirm-Execute)
 这是最重要的协作模式，用于所有非平凡的创建或修改操作。
 - **提议 (Propose)**: 在向文件写入任何重要内容（例如，填充设计方案、编写代码模块）之前，先以清晰的格式（如Markdown）向用户展示你将要写入的**完整内容**。
 - **确认 (Confirm)**: **必须**等待用户的明确批准（例如，“同意”、“可以”、“OK”）。
@@ -472,7 +478,7 @@ openspec archive <change-id> [--yes|-y]  # 标记为完成（为自动化添加 
 
 此模式可以最大程度地避免误解和返工。
 
-### 3. 面向任务的实施
+### 4. 面向任务的实施
 一旦一个提案被批准，`tasks.md` 文件就成为实施阶段的唯一行动指南。
 - 严格按照 `tasks.md` 的清单顺序执行。
 - 每完成一个或一组相关任务，就更新 `tasks.md` 文件，将 `- [ ]` 修改为 `- [x]`，以清晰地反映项目进度。

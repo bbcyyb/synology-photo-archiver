@@ -1,0 +1,47 @@
+# photo-archiver Specification
+
+## Purpose
+TBD - created by archiving change create-synology-photo-archiver. Update Purpose after archive.
+## Requirements
+### Requirement: 可配置的执行环境
+系统 MUST 允许用户通过一个独立的配置文件 (`config.ini`) 来定义所有关键参数，以避免将配置硬编码在代码中。
+
+#### Scenario: 成功加载配置
+- **GIVEN** 一个有效的 `config.ini` 文件，其中包含源目录、目标目录和密码
+- **WHEN** 程序启动
+- **THEN** 程序应成功加载这些配置，并用于后续操作
+
+#### Scenario: 配置文件缺失或无效
+- **GIVEN** `config.ini` 文件不存在或格式损坏
+- **WHEN** 程序启动
+- **THEN** 程序应立即失败，并返回一个清晰的错误信息，指明配置文件的问题
+
+### Requirement: 幂等的文件处理
+系统 MUST 确保多次在同一数据集上运行时，其结果与单次运行完全一致。已经归档过的文件不应被再次处理，除非它们被修改过。
+
+#### Scenario: 首次运行
+- **GIVEN** 一个包含 10 张新照片的源目录，且状态文件为空
+- **WHEN** 程序运行
+- **THEN** 系统应将这 10 张照片全部打包归档，并更新状态文件
+
+#### Scenario: 重复运行（无变化）
+- **GIVEN** 一个包含 10 张照片的源目录，且状态文件已包含这 10 张照片的信息
+- **WHEN** 程序再次运行
+- **THEN** 系统应不处理任何文件，并快速退出
+
+#### Scenario: 文件被修改
+- **GIVEN** 状态文件已记录了 'photo.jpg'
+- **AND** 'photo.jpg' 的修改时间戳发生了变化
+- **WHEN** 程序运行
+- **THEN** 系统应将 'photo.jpg' 识别为待处理文件，并将其归档。
+
+### Requirement: 加密与分卷压缩
+系统 MUST 使用 7-Zip 将待处理的文件打包成一个或多个加密的、固定大小的分卷压缩包。
+
+#### Scenario: 成功创建加密分卷
+- **GIVEN** 一批待处理的照片
+- **AND** 配置中已指定密码和分卷大小（如 `1g`)
+- **WHEN** 程序执行打包操作
+- **THEN** 在目标目录中应生成一个或多个 `.7z` 分卷文件（如 `archive.7z.001`）
+- **AND** 这些分卷文件必须使用指定的密码进行了加密
+
