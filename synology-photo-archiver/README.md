@@ -57,7 +57,7 @@
     ```
 3.  运行脚本：
     ```bash
-    python3 archiver.py
+    python3 src/archiver.py
     ```
     脚本会将其进度打印到控制台。
 
@@ -75,10 +75,10 @@
 5.  **任务设置** 选项卡:
     -   在 **用户定义的脚本** 下，输入以下命令，请务必调整脚本的路径：
         ```bash
-        cd /volume1/scripts/synology-photo-archiver && python3 archiver.py
+        cd /volume1/scripts/synology-photo-archiver && python3 src/archiver.py
         ```
     -   建议将输出结果重定向到日志文件以便于调试。您可以通过勾选“将运行结果发送至电子邮件”或在脚本命令中重定向输出来实现：
         ```bash
-        cd /volume1/scripts/synology-photo-archiver && python3 archiver.py >> /volume1/scripts/synology-photo-archiver/archiver.log 2>&1
+        cd /volume1/scripts/synology-photo-archiver && python3 src/archiver.py >> /volume1/scripts/synology-photo-archiver/archiver.log 2>&1
         ```
 6.  点击 **确定** 保存任务。您可以从任务计划程序中手动运行它以进行测试。
