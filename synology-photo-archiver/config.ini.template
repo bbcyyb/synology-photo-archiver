@@ -1,0 +1,11 @@
+[Paths]
+source_dir = /path/to/photos
+destination_dir = /path/to/archives
+7z_executable = /usr/bin/7z
+
+[Archive]
+password = YOUR_SECRET_PASSWORD
+volume_size = 1g
+
+[State]
+file = /path/to/state/processed_files.json
