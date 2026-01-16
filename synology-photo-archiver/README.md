@@ -1,84 +1,84 @@
-# Synology Photo Archiver
+# 群晖照片归档器
 
-A Python script to automatically find new and modified photos in a directory, package them into encrypted, split 7z archives, and move them to a destination directory. This script is designed to be run as a scheduled task on a Synology NAS.
+这是一个 Python 脚本，用于自动查找目录中新增和修改过的照片，将其打包成加密、分卷的 7z 归档文件，并移动到目标目录。此脚本设计为在群晖 NAS 上作为定时任务运行。
 
-## Features
+## 功能特性
 
-- **Idempotent**: The script keeps track of processed files and will only archive new or modified files.
-- **Configurable**: All paths, the archive password, and volume sizes can be set in a configuration file.
-- **Secure**: Creates password-protected 7z archives.
-- **Split Archives**: Splits large archives into smaller volumes for easier management.
+-   **幂等性**: 脚本会跟踪已处理的文件，并仅归档新增或修改过的文件。
+-   **可配置**: 所有路径、归档密码和分卷大小都可以在配置文件中设置。
+-   **安全**: 创建受密码保护的 7z 归档文件。
+-   **分卷归档**: 将大型归档文件分割成更小的卷，以便于管理。
 
-## Prerequisites
+## 前提条件
 
-1.  **Python 3**: Your Synology NAS must have Python 3 installed. You can install it from the Package Center.
-2.  **7-Zip**: The `7z` command-line tool must be installed. You may need to install it via the Synology community package source or by other means.
+1.  **Python 3**: 您的群晖 NAS 必须安装 Python 3。您可以通过套件中心安装。
+2.  **7-Zip**: 必须安装 `7z` 命令行工具。您可能需要通过群晖社区套件源或其他方式安装。
 
-## Setup
+## 设置
 
-1.  **Copy Files**: Copy the `synology-photo-archiver` directory to a location on your Synology NAS (e.g., `/volume1/scripts/`).
-2.  **Create `config.ini`**:
-    -   Navigate to the `synology-photo-archiver` directory.
-    -   Make a copy of `config.ini.template` and name it `config.ini`.
-    -   Edit `config.ini` with your desired settings:
+1.  **复制文件**: 将 `synology-photo-archiver` 目录复制到群晖 NAS 上的某个位置（例如，`/volume1/scripts/`）。
+2.  **创建 `config.ini`**:
+    -   导航到 `synology-photo-archiver` 目录。
+    -   复制 `config.ini.template` 并将其命名为 `config.ini`。
+    -   编辑 `config.ini`，配置您所需的设置：
         ```ini
         [Paths]
-        ; The directory where your original photos are stored.
+        ; 存放原始照片的目录。
         source_dir = /volume1/photo
         
-        ; The directory where the 7z archives will be saved.
+        ; 7z 归档文件将保存的目录。
         destination_dir = /volume1/backups/photo_archives
         
-        ; The full path to the 7z executable. Find it using 'which 7z' or 'find / -name 7z'.
+        ; 7z 可执行文件的完整路径。可以使用 'which 7z' 或 'find / -name 7z' 查找。
         7z_executable = /usr/local/bin/7z
 
         [Archive]
-        ; The password for your encrypted archives. Use a strong password.
+        ; 加密归档文件的密码。请使用强密码。
         password = YOUR_SECRET_PASSWORD
         
-        ; The size for each split volume (e.g., 1g = 1 GB, 500m = 500 MB).
+        ; 每个分卷的大小（例如，1g = 1 GB, 500m = 500 MB）。
         volume_size = 1g
 
         [State]
-        ; The file to store the state of processed files.
-        ; It's recommended to place this inside the script directory.
+        ; 用于存储已处理文件状态的文件。
+        ; 建议将其放置在脚本目录内。
         file = /volume1/scripts/synology-photo-archiver/processed_files.json
         ```
-3.  **Permissions**: Ensure the user running the script has read access to the `source_dir` and read/write access to the `destination_dir` and the script's directory (for the state file).
+3.  **权限**: 确保运行脚本的用户对 `source_dir` 具有读取权限，对 `destination_dir` 和脚本目录（用于状态文件）具有读写权限。
 
-## Running the Script Manually
+## 手动运行脚本
 
-You can run the script manually to test your configuration.
+您可以手动运行脚本以测试您的配置。
 
-1.  Open an SSH session to your Synology NAS.
-2.  Navigate to the script's directory:
+1.  通过 SSH 连接到您的群晖 NAS。
+2.  导航到脚本目录：
     ```bash
     cd /volume1/scripts/synology-photo-archiver
     ```
-3.  Run the script:
+3.  运行脚本：
     ```bash
     python3 archiver.py
     ```
-    The script will print its progress to the console.
+    脚本会将其进度打印到控制台。
 
-## Scheduling with Synology Task Scheduler
+## 使用群晖任务计划程序进行定时
 
-To run the script automatically, use the Task Scheduler in the Synology Control Panel.
+要自动运行脚本，请使用群晖控制面板中的任务计划程序。
 
-1.  Go to **Control Panel > Task Scheduler**.
-2.  Click **Create > Scheduled Task > User-defined script**.
-3.  **General Tab**:
-    -   **Task**: Give your task a name (e.g., "Photo Archiver").
-    -   **User**: Select the user who should run the script (e.g., `root` or an admin user).
-4.  **Schedule Tab**:
-    -   Set the schedule for how often you want the script to run (e.g., daily at 2:00 AM).
-5.  **Task Settings Tab**:
-    -   Under **User-defined script**, enter the following command, making sure to adjust the path to your script:
+1.  前往 **控制面板 > 任务计划程序**。
+2.  点击 **创建 > 计划的任务 > 用户定义的脚本**。
+3.  **常规** 选项卡:
+    -   **任务**: 为您的任务命名（例如，“照片归档器”）。
+    -   **用户**: 选择运行脚本的用户（例如，`root` 或管理员用户）。
+4.  **计划** 选项卡:
+    -   设置脚本的运行频率（例如，每天凌晨 2:00）。
+5.  **任务设置** 选项卡:
+    -   在 **用户定义的脚本** 下，输入以下命令，请务必调整脚本的路径：
         ```bash
         cd /volume1/scripts/synology-photo-archiver && python3 archiver.py
         ```
-    -   It is recommended to also set up output results to a log file for easier debugging. You can do this by checking "Send run details by email" or by redirecting the output in your script command:
+    -   建议将输出结果重定向到日志文件以便于调试。您可以通过勾选“将运行结果发送至电子邮件”或在脚本命令中重定向输出来实现：
         ```bash
         cd /volume1/scripts/synology-photo-archiver && python3 archiver.py >> /volume1/scripts/synology-photo-archiver/archiver.log 2>&1
         ```
-6.  Click **OK** to save the task. You can run it manually from the Task Scheduler to test it.
+6.  点击 **确定** 保存任务。您可以从任务计划程序中手动运行它以进行测试。
