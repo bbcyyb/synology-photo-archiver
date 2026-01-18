@@ -159,4 +159,4 @@ processed_files.json
 *.7z
 *.logs
 
-read-test/
+smoke-test/
