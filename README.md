@@ -1,5 +1,7 @@
 # 群晖照片归档器
 
+[![Python application](https://github.com/bbcyyb/synology-photo-archiver/actions/workflows/python-app.yml/badge.svg)](https://github.com/bbcyyb/synology-photo-archiver/actions/workflows/python-app.yml)
+
 这是一个 Python 脚本，用于自动查找目录中新增和修改过的照片，将其打包成加密、分卷的 7z 归档文件，并移动到目标目录。此脚本设计为在群晖 NAS 上作为定时任务运行。
 
 ## 功能特性
