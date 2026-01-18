@@ -3,6 +3,14 @@
 - [x] 1.2 创建 `src/state.py` 并迁移状态管理逻辑
 - [x] 1.3 创建 `src/scanner.py` 并迁移扫描逻辑
 - [x] 1.4 创建 `src/compression.py` 并迁移压缩逻辑
-- [ ] 1.5 将 `src/archiver.py` 重命名为 `src/main.py` 并重构以使用新模块
-- [ ] 1.6 更新 `tests/test_archiver.py` 以适应模块化结构
-- [ ] 1.7 运行测试确保功能正常
+- [x] 1.5 将 `src/archiver.py` 重命名为 `src/main.py` 并重构以使用新模块
+- [x] 1.6 更新 `tests/test_archiver.py` 以适应模块化结构
+- [x] 1.7 运行测试确保功能正常
+- [x] 1.8 将单元测试按模块拆分为独立文件
+  - [x] 创建 `tests/test_config.py` 测试配置模块
+  - [x] 创建 `tests/test_state.py` 测试状态管理模块
+  - [x] 创建 `tests/test_scanner.py` 测试文件扫描模块
+  - [x] 创建 `tests/test_compression.py` 测试压缩模块
+  - [x] 创建 `tests/test_main.py` 集成测试主流程
+  - [x] 删除旧的 `tests/test_archiver.py`
+  - [x] 运行所有测试确保通过（22 个测试）
