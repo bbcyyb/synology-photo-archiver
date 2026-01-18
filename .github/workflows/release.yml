@@ -29,7 +29,7 @@ jobs:
           zip -r ../synology-photo-archiver-${{ github.ref_name }}.zip synology-photo-archiver
       
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: synology-photo-archiver-${{ github.ref_name }}.zip
           generate_release_notes: true
