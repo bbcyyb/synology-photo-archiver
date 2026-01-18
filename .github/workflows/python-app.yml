@@ -1,4 +1,4 @@
-name: Python application
+name: Synology Archiver CI
 
 on:
   push:
