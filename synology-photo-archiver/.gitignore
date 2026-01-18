@@ -157,4 +157,6 @@ cython_debug/
 # Project Specific
 processed_files.json
 *.7z
-*.log
+*.logs
+
+read-test/
