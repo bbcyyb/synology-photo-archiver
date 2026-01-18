@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 
 from .config import load_config
-from .state import load_state, save_state
 from .scanner import scan_for_new_and_modified_files
 from .compression import create_archive
 
@@ -21,14 +20,10 @@ def main():
     seven_zip_exec = config.get('Paths', '7z_executable')
     password = config.get('Archive', 'password')
     volume_size = config.get('Archive', 'volume_size')
-    state_file_path = config.get('State', 'file')
-
     print(f"Source directory: {source_dir}")
     print(f"Destination directory: {destination_dir}")
 
-    # Load state
-    processed_files = load_state(state_file_path)
-    print(f"Loaded state for {len(processed_files)} files.")
+    processed_files = {}  # Always start with an empty state
 
     # Scan for new and modified files
     files_to_archive = scan_for_new_and_modified_files(source_dir, processed_files)
@@ -50,16 +45,9 @@ def main():
     )
 
     if success:
-        print("Archive created successfully. Updating state file.")
-        # Update state for successfully archived files
-        for file_path in files_to_archive:
-            relative_path_str = str(file_path.relative_to(Path(source_dir)))
-            processed_files[relative_path_str] = file_path.stat().st_mtime
-        
-        save_state(state_file_path, processed_files)
-        print("State file updated.")
+        print("Archive created successfully.")
     else:
-        print("Archive creation failed. State file will not be updated.")
+        print("Archive creation failed.")
         sys.exit(1)
 
 

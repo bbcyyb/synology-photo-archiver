@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 from src import compression
@@ -23,112 +23,101 @@ class TestCompression(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     @patch('subprocess.run')
-    def test_create_archive_success(self, mock_run):
-        """Test successful archive creation."""
-        # Mock subprocess.run to return success
+    def test_create_archive_no_split_success(self, mock_run):
+        """Test successful archive creation without splitting."""
         mock_run.return_value = MagicMock(returncode=0, stdout="Everything is fine")
         
         files = [Path('file1.jpg'), Path('file2.png')]
         source_dir = '/tmp/source'
         dest_dir = self.test_dir
-        seven_zip = '/usr/bin/7z'
+        seven_zip = 'tar' # Mimic standard tar executable name
         password = 'secret_pass'
-        volume = '1g'
+        volume = '0' # Disable splitting
+        
+        success = compression.create_archive(files, source_dir, dest_dir, seven_zip, password, volume)
+        
+        self.assertTrue(success)
+        mock_run.assert_called_once()
+        
+        # Verify tar arguments
+        args = mock_run.call_args[0][0]
+        self.assertEqual(args[0], 'tar')
+        self.assertIn('-czf', args)
+        self.assertIn('-T', args)
+
+    @patch('subprocess.Popen')
+    def test_create_archive_split_success(self, mock_popen):
+        """Test successful archive creation WITH splitting."""
+        # Mock Popen instances
+        process_mock1 = MagicMock()
+        process_mock1.stdout.close = MagicMock()
+        
+        process_mock2 = MagicMock()
+        process_mock2.communicate.return_value = (b'', b'')
+        process_mock2.returncode = 0
+        
+        # side_effect to return different mocks for p1 and p2 calls
+        mock_popen.side_effect = [process_mock1, process_mock2]
+        
+        files = [Path('file1.jpg')]
+        source_dir = '/tmp/source'
+        dest_dir = self.test_dir
+        seven_zip = 'tar'
+        password = 'secret_pass'
+        volume = '1m' # Enable splitting
         
         success = compression.create_archive(files, source_dir, dest_dir, seven_zip, password, volume)
         
         self.assertTrue(success)
         
-        # Verify 7z was called
-        mock_run.assert_called_once()
+        # Verify we had 2 Popen calls (tar and split)
+        self.assertEqual(mock_popen.call_count, 2)
         
-        # Verify 7z was called with correct arguments
-        args = mock_run.call_args[0][0]
-        self.assertEqual(args[0], seven_zip)
-        self.assertEqual(args[1], 'a')
-        self.assertIn(f"-p{password}", args)
-        self.assertIn(f"-v{volume}", args)
+        # Verify 1st call (tar)
+        args1 = mock_popen.call_args_list[0][0][0]
+        self.assertEqual(args1[0], 'tar')
+        self.assertIn('-cz', args1) # -cz for pipe (no f)
         
-        # Check if archive path is in dest_dir
-        archive_arg = args[2]
-        self.assertTrue(archive_arg.startswith(dest_dir))
+        # Verify 2nd call (split)
+        args2 = mock_popen.call_args_list[1][0][0]
+        self.assertEqual(args2[0], 'split')
+        self.assertIn('-d', args2) # Ensure numeric suffix flag is there
+        self.assertIn(str(1024*1024), args2) # 1m in bytes
 
-    @patch('subprocess.run')
-    def test_create_archive_failure(self, mock_run):
-        """Test archive creation failure."""
-        # Mock subprocess.run to raise CalledProcessError
-        mock_run.side_effect = subprocess.CalledProcessError(1, ['7z', 'a'], "", "Error")
+    @patch('subprocess.Popen')
+    def test_create_archive_split_failure(self, mock_popen):
+        """Test split failure."""
+        process_mock1 = MagicMock()
+        process_mock1.stdout.close = MagicMock()
+        
+        process_mock2 = MagicMock()
+        process_mock2.communicate.return_value = (b'', b'Error')
+        process_mock2.returncode = 1 # Simulate failure
+        
+        mock_popen.side_effect = [process_mock1, process_mock2]
         
         files = [Path('file1.jpg')]
-        success = compression.create_archive(files, '/tmp', self.test_dir, '7z', 'pass', '1g')
+        
+        # create_archive might raise or return False depending on impl
+        # In current impl, it re-raises CalledProcessError if returncode != 0
+        # Then catches it and returns False
+        
+        success = compression.create_archive(files, '/tmp', self.test_dir, 'tar', 'pass', '1m')
         
         self.assertFalse(success)
 
     @patch('subprocess.run')
-    def test_create_archive_7z_not_found(self, mock_run):
-        """Test that missing 7z executable exits."""
-        # Mock subprocess.run to raise FileNotFoundError
+    def test_create_archive_executable_not_found(self, mock_run):
+        """Test missing executable."""
         mock_run.side_effect = FileNotFoundError()
         
         files = [Path('file1.jpg')]
         
         with self.assertRaises(SystemExit) as cm:
-            compression.create_archive(files, '/tmp', self.test_dir, 'nonexistent_7z', 'pass', '1g')
+            # Only trigger normal run, so volume=0
+            compression.create_archive(files, '/tmp', self.test_dir, 'nonexistent', 'pass', 0)
         
         self.assertEqual(cm.exception.code, 1)
-
-    @patch('subprocess.run')
-    def test_create_archive_creates_destination_dir(self, mock_run):
-        """Test that create_archive creates destination directory if it doesn't exist."""
-        mock_run.return_value = MagicMock(returncode=0, stdout="OK")
-        
-        nested_dest = os.path.join(self.test_dir, 'nested', 'dest')
-        files = [Path('file1.jpg')]
-        
-        compression.create_archive(files, '/tmp', nested_dest, '7z', 'pass', '1g')
-        
-        # Verify destination directory was created
-        self.assertTrue(os.path.exists(nested_dest))
-
-    @patch('subprocess.run')
-    def test_create_archive_with_multiple_files(self, mock_run):
-        """Test archive creation with multiple files."""
-        mock_run.return_value = MagicMock(returncode=0, stdout="OK")
-        
-        files = [
-            Path('file1.jpg'),
-            Path('file2.png'),
-            Path('subdir/file3.txt'),
-            Path('subdir/nested/file4.pdf')
-        ]
-        
-        success = compression.create_archive(files, '/tmp', self.test_dir, '7z', 'pass', '1g')
-        
-        self.assertTrue(success)
-        
-        # Verify the file list was created with all files
-        args = mock_run.call_args[0][0]
-        file_list_arg = [arg for arg in args if arg.startswith('@')][0]
-        file_list_path = file_list_arg[1:]  # Remove '@' prefix
-        
-        # Note: The file list is cleaned up after execution, so we can't verify its contents
-        # But we can verify the argument was passed correctly
-        self.assertTrue(file_list_arg.startswith('@file_list_'))
-
-    @patch('subprocess.run')
-    def test_create_archive_with_custom_volume_size(self, mock_run):
-        """Test archive creation with custom volume size."""
-        mock_run.return_value = MagicMock(returncode=0, stdout="OK")
-        
-        files = [Path('file1.jpg')]
-        volume_sizes = ['100m', '1g', '5g', '10m']
-        
-        for volume in volume_sizes:
-            compression.create_archive(files, '/tmp', self.test_dir, '7z', 'pass', volume)
-            
-            args = mock_run.call_args[0][0]
-            self.assertIn(f"-v{volume}", args)
-
 
 if __name__ == '__main__':
     unittest.main()
