@@ -1,0 +1,35 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Archive Release Bundle
+        run: |
+          # Create a temporary directory for packing
+          mkdir -p release_pack
+          # Copy the main folder
+          cp -r synology-photo-archiver release_pack/
+          # Copy the README
+          cp README.md release_pack/synology-photo-archiver/
+          # Create the zip file
+          cd release_pack
+          zip -r ../synology-photo-archiver-${{ github.ref_name }}.zip synology-photo-archiver
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: synology-photo-archiver-${{ github.ref_name }}.zip
+          generate_release_notes: true
